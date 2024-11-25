@@ -61,5 +61,10 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp"
-    }
+    },
+    "cppRecolored.libclangPath": "/usr/lib/x86_64-linux-gnu/libclang-11.so.1",
+    "ctest-lab.buildDirectory": "build/bin",
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+    "testExplorer.addToEditorContextMenu": true,
+    "testExplorer.errorDecoration": false
 }
