@@ -1,24 +1,15 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch",
-            "type": "cppdbg",
+            "name": "(lldb) Launch",
+            "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/build/tests/StepTimingGenerator_Tests",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${fileDirname}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "lldb",
-            "miDebuggerPath": "lldb",
-            "setupCommands": [
-            ]
+            "args": ["--gtest_break_on_failure"],  // Example for Google Test
+            "cwd": "${workspaceRoot}",
+            "initCommands": [],  // Custom LLDB commands can be placed here
+            "terminal": "integrated"  // This controls the terminal used
         }
-
     ]
 }
