@@ -13,12 +13,15 @@ The easiest way to get started with a CMake project is with FetchContent
 
 ```
 FetchContent_Declare(
-  Simple3dStepperMovementPlanner
+  StepperMovementPlanner
   GIT_REPOSITORY https://github.com/digiexchris/Simple3dStepperMovementPlanner.git
   GIT_TAG 0.1.0
 )
 
-FetchContent_MakeAvailable(Simple3dStepperMovementPlanner)
+FetchContent_MakeAvailable(StepperMovementPlanner)
+
+target_link_libraries(YourProject StepTimingGenerator)
+
 ```
 
 ## Usage

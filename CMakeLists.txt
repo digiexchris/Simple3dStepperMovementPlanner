@@ -22,6 +22,8 @@ file(GLOB SOURCES src/*.cpp)
 # Create the library
 add_library(StepTimingGenerator ${SOURCES})
 
+target_include_directories(StepTimingGenerator PUBLIC include)
+
 # Check if this project is used in another project
 if(NOT TARGET ${PROJECT_NAME}_external)
     # Add tests
