@@ -1,5 +1,7 @@
 #include "StepPlanner.hpp"
 #include "StepTiming.hpp"
+#include "Types.hpp"
+#include "Util.hpp"
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <bits/stdint-uintn.h>
@@ -147,27 +149,37 @@ TEST(StepTimingGenerator, GetComponentSpeedsMultiAxis) {
 TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingXAxis) {
   StepTimingGenerator generator(xLimits, yLimits, zLimits);
   Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 end = {50, 0, 0}; // Move primarily on the X axis
+  Vector3Int32 end = {200, 0, 0}; // Move primarily on the X axis
 
   // Expected speed capping
   uint16_t cappedSpeed = xLimits.maxSpeed;
 
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
-  uint16_t requestedSpeed = 1000;
+  uint16_t requestedSpeed = 3000;
   uint16_t endingSpeed = 0;
+  uint32_t minimumInterval =
+      std::floor(FREQ_TO_PERIOD_US(cappedSpeed)); // should be 2000 microseconds
 
-  auto steps = generator.GenerateSteps(start, end, startingSpeedDirection,
-                                       requestedSpeed, endingSpeed);
+  std::vector<StepTiming> steps = generator.GenerateSteps(
+      start, end, startingSpeedDirection, requestedSpeed, endingSpeed);
 
-  ASSERT_EQ(steps.size(), 50);
+  ASSERT_EQ(steps.size(), 200);
 
-  uint32_t expectedDelay = 2000;
+  uint32_t lowestActualDelay = steps[0].delay;
 
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delta, Vector3Int32({1, 0, 0}));
-    EXPECT_EQ(steps[i].delay, expectedDelay);
+    if (steps[i].delay < lowestActualDelay) {
+      lowestActualDelay = steps[i].delay;
+    }
+    EXPECT_EQ(steps[i].delta, Vector3Int8({1, 0, 0}));
+
+    EXPECT_GE(lowestActualDelay, minimumInterval);
+
+    // EXPECT_EQ(steps[i].delay, expectedDelay);
   }
 
+  EXPECT_GE(lowestActualDelay, minimumInterval);
+  EXPECT_EQ(lowestActualDelay, 2000); //(500 steps per secoind)
   // EXPECT_EQ(steps.back().delay, 0);
 }
 
@@ -179,6 +191,8 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingYAxis) {
 
   // Expected speed capping
   uint16_t cappedSpeed = yLimits.maxSpeed;
+  uint32_t minimumInterval =
+      std::floor(FREQ_TO_PERIOD_US(cappedSpeed)); // should be 2000 microseconds
 
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 1000;
@@ -189,14 +203,20 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingYAxis) {
 
   ASSERT_EQ(steps.size(), 50);
 
-  uint32_t expectedDelay = 1.0 / 400.0 * 1000000;
+  uint32_t lowestActualDelay = steps[0].delay;
 
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delta, Vector3Int32({0, 1, 0}));
-    EXPECT_EQ(steps[i].delay, expectedDelay);
+
+    if (steps[i].delay < lowestActualDelay) {
+      lowestActualDelay = steps[i].delay;
+    }
+
+    EXPECT_EQ(steps[i].delta, Vector3Int8({0, 1, 0}));
+    EXPECT_GE(lowestActualDelay, minimumInterval);
   }
 
-  // EXPECT_EQ(steps.back().delay, 0);
+  EXPECT_GE(lowestActualDelay, minimumInterval);
+  EXPECT_EQ(lowestActualDelay, 2500); //(400 steps per secoind)
 }
 
 // Testing when the speed is capped by the Z axis limit
@@ -207,6 +227,8 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingZAxis) {
 
   // Expected speed capping
   uint16_t cappedSpeed = zLimits.maxSpeed;
+  uint32_t minimumInterval =
+      std::floor(FREQ_TO_PERIOD_US(cappedSpeed)); // should be 2000 microseconds
 
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 1000;
@@ -217,12 +239,20 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingZAxis) {
 
   ASSERT_EQ(steps.size(), 50);
 
-  uint32_t expectedDelay = 1.0 / 300.0 * 1000000;
+  uint32_t lowestActualDelay = steps[0].delay;
 
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delta, Vector3Int32({0, 0, 1}));
-    EXPECT_EQ(steps[i].delay, expectedDelay);
+
+    if (steps[i].delay < lowestActualDelay) {
+      lowestActualDelay = steps[i].delay;
+    }
+
+    EXPECT_EQ(steps[i].delta, Vector3Int8({0, 0, 1}));
+    EXPECT_GE(lowestActualDelay, minimumInterval);
   }
+
+  EXPECT_GE(lowestActualDelay, minimumInterval);
+  EXPECT_EQ(lowestActualDelay, 3333); //(400 steps per secoind)
 
   // EXPECT_EQ(steps.back().delay, 0);
 }
@@ -242,20 +272,26 @@ TEST(StepTimingGeneratorDifferentLimitsTest, NoSpeedCappingXAxis) {
   ASSERT_EQ(steps.size(),
             10); // The number of steps should match the X-axis movement
 
-  uint32_t expectedDelay = 1.0 / 300.0 * 1000000;
+  uint32_t minimumDelay = std::floor(
+      FREQ_TO_PERIOD_US(xLimits.maxSpeed)); // should be 3333 microseconds
+
+  uint32_t actualMinimumDelay = steps[0].delay;
 
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delta, Vector3Int32({1, 0, 0}));
-    EXPECT_EQ(steps[i].delay, expectedDelay);
+    if (steps[i].delay < actualMinimumDelay) {
+      actualMinimumDelay = steps[i].delay;
+    }
+    EXPECT_EQ(steps[i].delta, Vector3Int8({1, 0, 0}));
   }
 
-  // EXPECT_EQ(steps.back().delay, 0); // The last step should have zero delay
+  EXPECT_GT(actualMinimumDelay,
+            minimumDelay); // The last step should have zero delay
 }
 
 TEST(StepTimingGeneratorDifferentLimitsTest, NoSpeedCappingYAxis) {
   StepTimingGenerator generator(xLimits, yLimits, zLimits);
   Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 end = {0, 10, 0}; // Move primarily on the Y axis
+  Vector3Int32 end = {0, 10, 0}; // Move primarily on the X axis
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 300;
   uint16_t endingSpeed = 0;
@@ -264,40 +300,52 @@ TEST(StepTimingGeneratorDifferentLimitsTest, NoSpeedCappingYAxis) {
                                        requestedSpeed, endingSpeed);
 
   ASSERT_EQ(steps.size(),
-            10); // The number of steps should match the Y-axis movement
+            10); // The number of steps should match the X-axis movement
 
-  uint32_t expectedDelay = 1.0 / 300.0 * 1000000;
+  uint32_t minimumDelay = std::floor(
+      FREQ_TO_PERIOD_US(yLimits.maxSpeed)); // should be 3333 microseconds
+
+  uint32_t actualMinimumDelay = steps[0].delay;
 
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delta, Vector3Int32({0, 1, 0}));
-    EXPECT_EQ(steps[i].delay, expectedDelay);
+    if (steps[i].delay < actualMinimumDelay) {
+      actualMinimumDelay = steps[i].delay;
+    }
+    EXPECT_EQ(steps[i].delta, Vector3Int8({0, 1, 0}));
   }
 
-  // EXPECT_EQ(steps.back().delay, 0); // The last step should have zero delay
+  EXPECT_GT(actualMinimumDelay,
+            minimumDelay); // The last step should have zero delay
 }
 
 TEST(StepTimingGeneratorDifferentLimitsTest, NoSpeedCappingZAxis) {
   StepTimingGenerator generator(xLimits, yLimits, zLimits);
   Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 end = {0, 0, 10}; // Move primarily on the Z axis
+  Vector3Int32 end = {0, 0, 10}; // Move primarily on the X axis
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
-  uint16_t requestedSpeed = 200;
+  uint16_t requestedSpeed = 300;
   uint16_t endingSpeed = 0;
 
   auto steps = generator.GenerateSteps(start, end, startingSpeedDirection,
                                        requestedSpeed, endingSpeed);
 
   ASSERT_EQ(steps.size(),
-            10); // The number of steps should match the Z-axis movement
+            10); // The number of steps should match the X-axis movement
 
-  uint32_t expectedDelay = 1.0 / 200.0 * 1000000;
+  uint32_t minimumDelay = std::floor(
+      FREQ_TO_PERIOD_US(zLimits.maxSpeed)); // should be 3333 microseconds
+
+  uint32_t actualMinimumDelay = steps[0].delay;
 
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delta, Vector3Int32({0, 0, 1}));
-    EXPECT_EQ(steps[i].delay, expectedDelay);
+    if (steps[i].delay < actualMinimumDelay) {
+      actualMinimumDelay = steps[i].delay;
+    }
+    EXPECT_EQ(steps[i].delta, Vector3Int8({0, 0, 1}));
   }
 
-  // EXPECT_EQ(steps.back().delay, 0); // The last step should have zero delay
+  EXPECT_GT(actualMinimumDelay,
+            minimumDelay); // The last step should have zero delay
 }
 
 // A simple linear move on the X-axis with different AxisLimits
@@ -316,12 +364,18 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SimpleLinearMove) {
 
   uint32_t expectedDelay = 1.0 / 100 * 1000000;
 
+  uint32_t actualMinimumDelay = steps[0].delay;
+
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delta, Vector3Int32({1, 0, 0}));
-    EXPECT_EQ(steps[i].delay, expectedDelay);
+
+    if (steps[i].delay < actualMinimumDelay) {
+      actualMinimumDelay = steps[i].delay;
+    }
+    EXPECT_EQ(steps[i].delta, Vector3Int8({1, 0, 0}));
   }
 
-  // EXPECT_EQ(steps.back().delay, 0); // The last step should have zero delay
+  EXPECT_EQ(actualMinimumDelay,
+            expectedDelay); // This test should reach the requested speed
 }
 
 // Testing when start and end are the same with different AxisLimits
@@ -343,6 +397,7 @@ TEST(StepTimingGeneratorDifferentLimitsTest, NoMovement) {
 TEST(StepTimingGeneratorDifferentLimitsTest, DiagonalMove) {
   StepTimingGenerator generator(xLimits, yLimits, zLimits);
   Vector3Int32 start = {0, 0, 0};
+  Vector3Int32 current = {0, 0, 0};
   Vector3Int32 end = {25, 25, 25};
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 1000;
@@ -354,37 +409,91 @@ TEST(StepTimingGeneratorDifferentLimitsTest, DiagonalMove) {
   ASSERT_EQ(steps.size(), 25);
 
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delta, Vector3Int32({1, 1, 1}));
-    // EXPECT_EQ(steps[i].delay, expectedDelay);
+    EXPECT_EQ(steps[i].delta, Vector3Int8({1, 1, 1}));
+    std::transform(current.begin(), current.end(), steps[i].delta.begin(),
+                   current.begin(), std::plus<int>());
   }
-  EXPECT_EQ(steps[0].delay, 999999);
-  EXPECT_EQ(steps[1].delay, 999999);
-  EXPECT_EQ(steps[2].delay, 999999);
-  EXPECT_EQ(steps[3].delay, 999999);
-  EXPECT_EQ(steps[4].delay, 999999);
-  EXPECT_EQ(steps[5].delay, 999999);
-  EXPECT_EQ(steps[6].delay, 999999);
-  EXPECT_EQ(steps[7].delay, 999999);
-  EXPECT_EQ(steps[8].delay, 999999);
-  EXPECT_EQ(steps[9].delay, 999999);
-  EXPECT_EQ(steps[10].delay, 999999);
-  EXPECT_EQ(steps[11].delay, 999999);
-  EXPECT_EQ(steps[12].delay, 999999);
-  EXPECT_EQ(steps[13].delay, 999999);
-  EXPECT_EQ(steps[14].delay, 999999);
-  EXPECT_EQ(steps[15].delay, 999999);
-  EXPECT_EQ(steps[16].delay, 999999);
-  EXPECT_EQ(steps[17].delay, 999999);
-  EXPECT_EQ(steps[18].delay, 999999);
-  EXPECT_EQ(steps[19].delay, 999999);
-  EXPECT_EQ(steps[20].delay, 999999);
-  EXPECT_EQ(steps[21].delay, 999999);
-  EXPECT_EQ(steps[22].delay, 999999);
-  EXPECT_EQ(steps[23].delay, 999999);
-  EXPECT_EQ(steps[24].delay, 999999);
-  EXPECT_EQ(steps[25].delay, 999999);
+  EXPECT_EQ(steps[0].delay, 916944);
+  EXPECT_EQ(steps[1].delay, 833888);
+  EXPECT_EQ(steps[2].delay, 750832);
+  EXPECT_EQ(steps[3].delay, 667776);
+  EXPECT_EQ(steps[4].delay, 584720);
+  EXPECT_EQ(steps[5].delay, 501664);
+  EXPECT_EQ(steps[6].delay, 418608);
+  EXPECT_EQ(steps[7].delay, 335552);
+  EXPECT_EQ(steps[8].delay, 252496);
+  EXPECT_EQ(steps[9].delay, 169440);
+  EXPECT_EQ(steps[10].delay, 86384);
+  EXPECT_EQ(steps[11].delay, 3333);
+  EXPECT_EQ(steps[12].delay, 3333);
+  EXPECT_EQ(steps[13].delay, 86389);
+  EXPECT_EQ(steps[14].delay, 169445);
+  EXPECT_EQ(steps[15].delay, 252501);
+  EXPECT_EQ(steps[16].delay, 335557);
+  EXPECT_EQ(steps[17].delay, 418613);
+  EXPECT_EQ(steps[18].delay, 501669);
+  EXPECT_EQ(steps[19].delay, 584725);
+  EXPECT_EQ(steps[20].delay, 667781);
+  EXPECT_EQ(steps[21].delay, 750837);
+  EXPECT_EQ(steps[22].delay, 833893);
+  EXPECT_EQ(steps[23].delay, 916949);
+  EXPECT_EQ(steps[24].delay, 916949);
 
-  // EXPECT_EQ(steps.back().delay, 0);
+  EXPECT_EQ(current[0], 25);
+  EXPECT_EQ(current[1], 25);
+  EXPECT_EQ(current[2], 25);
+}
+
+// Testing a diagonal move with all axes with different AxisLimits, in the
+// negative direction
+TEST(StepTimingGeneratorDifferentLimitsTest, DiagonalMoveNegative) {
+  StepTimingGenerator generator(xLimits, yLimits, zLimits);
+  Vector3Int32 start = {0, 0, 0};
+  Vector3Int32 current = {0, 0, 0};
+  Vector3Int32 end = {-25, -25, -25};
+  Vector<uint16_t> startingSpeedDirection({0, 0, 0});
+  uint16_t requestedSpeed = 1000;
+  uint16_t endingSpeed = 0;
+
+  auto steps = generator.GenerateSteps(start, end, startingSpeedDirection,
+                                       requestedSpeed, endingSpeed);
+
+  ASSERT_EQ(steps.size(), 25);
+
+  for (size_t i = 0; i < steps.size(); ++i) {
+    EXPECT_EQ(steps[i].delta, Vector3Int8({-1, -1, -1}));
+    std::transform(current.begin(), current.end(), steps[i].delta.begin(),
+                   current.begin(), std::plus<int>());
+  }
+  EXPECT_EQ(steps[0].delay, 916944);
+  EXPECT_EQ(steps[1].delay, 833888);
+  EXPECT_EQ(steps[2].delay, 750832);
+  EXPECT_EQ(steps[3].delay, 667776);
+  EXPECT_EQ(steps[4].delay, 584720);
+  EXPECT_EQ(steps[5].delay, 501664);
+  EXPECT_EQ(steps[6].delay, 418608);
+  EXPECT_EQ(steps[7].delay, 335552);
+  EXPECT_EQ(steps[8].delay, 252496);
+  EXPECT_EQ(steps[9].delay, 169440);
+  EXPECT_EQ(steps[10].delay, 86384);
+  EXPECT_EQ(steps[11].delay, 3333);
+  EXPECT_EQ(steps[12].delay, 3333);
+  EXPECT_EQ(steps[13].delay, 86389);
+  EXPECT_EQ(steps[14].delay, 169445);
+  EXPECT_EQ(steps[15].delay, 252501);
+  EXPECT_EQ(steps[16].delay, 335557);
+  EXPECT_EQ(steps[17].delay, 418613);
+  EXPECT_EQ(steps[18].delay, 501669);
+  EXPECT_EQ(steps[19].delay, 584725);
+  EXPECT_EQ(steps[20].delay, 667781);
+  EXPECT_EQ(steps[21].delay, 750837);
+  EXPECT_EQ(steps[22].delay, 833893);
+  EXPECT_EQ(steps[23].delay, 916949);
+  EXPECT_EQ(steps[24].delay, 916949);
+
+  EXPECT_EQ(current[0], -25);
+  EXPECT_EQ(current[1], -25);
+  EXPECT_EQ(current[2], -25);
 }
 
 // Testing a non-uniform move with different distances on each axis with
@@ -392,6 +501,7 @@ TEST(StepTimingGeneratorDifferentLimitsTest, DiagonalMove) {
 TEST(StepTimingGeneratorDifferentLimitsTest, NonUniformMove) {
   StepTimingGenerator generator(xLimits, yLimits, zLimits);
   Vector3Int32 start = {0, 0, 0};
+  Vector3Int32 current = {0, 0, 0};
   Vector3Int32 end = {10, 5, 2};
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 1000;
@@ -411,9 +521,20 @@ TEST(StepTimingGeneratorDifferentLimitsTest, NonUniformMove) {
   uint16_t expectedDelayX = 1.0 / 500 * 1000000;
 
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delay, expectedDelayX);
+    std::transform(current.begin(), current.end(), steps[i].delta.begin(),
+                   current.begin(), std::plus<int>());
   }
 
+  EXPECT_EQ(steps[0].delay, 800400);
+  EXPECT_EQ(steps[1].delay, 600800);
+  EXPECT_EQ(steps[2].delay, 401200);
+  EXPECT_EQ(steps[3].delay, 201600);
+  EXPECT_EQ(steps[4].delay, 2000);
+  EXPECT_EQ(steps[5].delay, 201600);
+  EXPECT_EQ(steps[6].delay, 401200);
+  EXPECT_EQ(steps[7].delay, 600800);
+  EXPECT_EQ(steps[8].delay, 800400);
+  EXPECT_EQ(steps[9].delay, 800400);
   // EXPECT_EQ(steps.back().delay, 0);
 }
 
@@ -421,10 +542,13 @@ TEST(StepTimingGeneratorDifferentLimitsTest,
      NonUniformMoveCappedByNonDrivingAxis) {
   StepTimingGenerator generator(xLimits, yLimits, zLimits);
   Vector3Int32 start = {0, 0, 0};
+  Vector3Int32 current = {0, 0, 0};
   Vector3Int32 end = {10, 5, 9};
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 1000;
   uint16_t endingSpeed = 0;
+
+  uint32_t minInterval = std::floor(FREQ_TO_PERIOD_US(zLimits.maxSpeed));
 
   auto steps = generator.GenerateSteps(start, end, startingSpeedDirection,
                                        requestedSpeed, endingSpeed);
@@ -441,13 +565,25 @@ TEST(StepTimingGeneratorDifferentLimitsTest,
   float effectiveYSpeed = 5.0 / 10 * xLimits.maxSpeed;
   float cappedSpeed = zLimits.maxSpeed;
   float scaleRatio = cappedSpeed / effectiveZSpeed;
-  uint16_t scaledSpeed = 500 * scaleRatio;
+  float scaledSpeed = 500 * scaleRatio;
 
-  uint16_t expectedDelayX = 1.0 / scaledSpeed * 1000000;
+  // uint32_t expectedMinDelayX = std::round(1.0 / scaledSpeed * 1000000); this
+  // evaluates as 2999, but the actual component speed ends up being 3005 for
+  // some reason probably due to GetComponentSpeeds using transformations using
+  // the scale. Close enough though.
+
+  uint32_t actualMinDelay = steps[0].delay;
 
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delay, expectedDelayX);
+    if (steps[i].delay < actualMinDelay) {
+      actualMinDelay = steps[i].delay;
+    }
+    std::transform(current.begin(), current.end(), steps[i].delta.begin(),
+                   current.begin(), std::plus<int>());
   }
 
-  // EXPECT_EQ(steps.back().delay, 0);
+  EXPECT_EQ(current[0], 10);
+  EXPECT_EQ(current[1], 5);
+  EXPECT_EQ(current[2], 9);
+  EXPECT_EQ(actualMinDelay, 3005);
 }

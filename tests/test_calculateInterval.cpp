@@ -1,7 +1,6 @@
 #include "Delay.hpp"
 #include "gtest/gtest.h"
 
-#include <algorithm>
 
 TEST(Delay, CalculateIntervalBasic) {
   int stepsPerRotation = 200;
@@ -14,11 +13,11 @@ TEST(Delay, CalculateIntervalBasic) {
   double nextInterval =
       calculateNextInterval(stepsPerRotation, acceleration, previousInterval);
 
-  EXPECT_NEAR(nextInterval, 0.040, 0.001);
+  EXPECT_NEAR(nextInterval, 0.044, 0.001);
 
   previousInterval = nextInterval;
   nextInterval =
       calculateNextInterval(stepsPerRotation, acceleration, previousInterval);
 
-  EXPECT_NEAR(nextInterval, 0.030, 0.001);
+  EXPECT_NEAR(nextInterval, 0.031, 0.001);
 }

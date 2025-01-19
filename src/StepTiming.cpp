@@ -94,7 +94,7 @@ std::vector<StepTiming> StepTimingGenerator::GenerateSteps(
     }
   }
 
-  Vector3Int32List deltas = PointsToDeltas(points.points);
+  Vector3Int8List deltas = PointsToDeltas(points.points);
 
   MovementProfile movementProfile = CalculateMovementProfile(
       deltas.size(), startingSpeedDirection[points.drivingAxis],
@@ -156,9 +156,8 @@ std::vector<StepTiming> StepTimingGenerator::GenerateSteps(
       } break;
       }
       // create StepTiming step
-      StepTiming step(deltas[deltaIndex],
+      StepTiming step(deltas[deltaIndex], currentDelay);
 
-                      currentDelay);
       steps.push_back(step);
       deltaIndex++;
     }
@@ -167,7 +166,10 @@ std::vector<StepTiming> StepTimingGenerator::GenerateSteps(
   // make the very last one have no delay. as I don't know how  to handle this
   // if we chained more steps on, it would start with a step, not a delay, so
   // this one should probably end in a delayanyway.
-  steps.back().delay = 0;
+
+  // modified to be the same delay as the previous step because a zero delay
+  // violates the maximum speed rules in other areas
+  steps.back().delay = steps.at(steps.size() - 2).delay;
   return steps;
 }
 

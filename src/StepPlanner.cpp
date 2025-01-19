@@ -5,7 +5,6 @@
 #include "StepPlanner.hpp"
 #include "Types.hpp"
 
-// todo change the params to vector3i32
 BresenhamPoints Bresenham3D(Vector3Int32 start, Vector3Int32 end) {
 
   uint8_t drivingAxis = 16;
@@ -103,13 +102,14 @@ BresenhamPoints Bresenham3D(Vector3Int32 start, Vector3Int32 end) {
   return BresenhamPoints{ListOfPoints, drivingAxis};
 }
 
-Vector3Int32List PointsToDeltas(Vector3Int32List &aListOfPoints) {
-  Vector3Int32List ListOfDeltas;
+Vector3Int8List PointsToDeltas(Vector3Int32List &aListOfPoints) {
+  Vector3Int8List listOfDeltas;
   for (size_t i = 0; i < aListOfPoints.size() - 1; i++) {
-    Vector3Int32 delta = {aListOfPoints[i + 1][0] - aListOfPoints[i][0],
-                          aListOfPoints[i + 1][1] - aListOfPoints[i][1],
-                          aListOfPoints[i + 1][2] - aListOfPoints[i][2]};
-    ListOfDeltas.push_back(delta);
+    Vector3Int8 delta = {
+        static_cast<int8_t>(aListOfPoints[i + 1][0] - aListOfPoints[i][0]),
+        static_cast<int8_t>(aListOfPoints[i + 1][1] - aListOfPoints[i][1]),
+        static_cast<int8_t>(aListOfPoints[i + 1][2] - aListOfPoints[i][2])};
+    listOfDeltas.push_back(delta);
   }
-  return ListOfDeltas;
+  return listOfDeltas;
 }

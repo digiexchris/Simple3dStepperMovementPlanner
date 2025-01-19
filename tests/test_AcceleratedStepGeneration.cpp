@@ -4,7 +4,6 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <bits/stdint-uintn.h>
-#include <chrono>
 #include <cmath>
 
 class TestGenerator : public StepTimingGenerator {
@@ -60,8 +59,8 @@ TEST(StepTimingGeneratorAcceleration, NonUniformMoveCappedByNonDrivingAxis) {
 
   uint16_t expectedDelayX = 1.0 / scaledSpeed * 1000000;
 
-  std::array<uint32_t, 10> expected(
-      {750751, 501502, 252253, 3003, 3003, 3003, 252252, 501501, 750751, 0});
+  std::array<uint32_t, 10> expected({750751, 501502, 252253, 3003, 3003, 3003,
+                                     252252, 501501, 750751, 750750});
 
   Vector3Int32 position({0, 0, 0});
   for (int i = 0; i < steps.size(); ++i) {

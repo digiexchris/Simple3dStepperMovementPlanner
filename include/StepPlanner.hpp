@@ -12,4 +12,4 @@ BresenhamPoints Bresenham3D(Vector3Int32 start, Vector3Int32 end);
 
 // turn points returned from the Bresenham function into how far each point
 // changes from the previous point
-Vector3Int32List PointsToDeltas(Vector3Int32List &aListOfPoints);
+Vector3Int8List PointsToDeltas(Vector3Int32List &aListOfPoints);

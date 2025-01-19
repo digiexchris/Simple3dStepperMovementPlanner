@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <cmath>
 
 constexpr double PI = 3.14159265358979323846;
@@ -17,21 +16,14 @@ constexpr double PI = 3.14159265358979323846;
 inline double calculateNextInterval(int stepsPerRotation, double acceleration,
                                     double previousInterval) {
   double alpha = 2 * PI / stepsPerRotation; // Step angle in radians
-
-  // Convert acceleration from steps/s^2 to rad/s^2
   double radsPerSecondSquared = acceleration * alpha;
 
-  // If previousInterval is hard-coded, assume first interval is provided
-  // correctly
   if (previousInterval <= 0) {
-    return std::sqrt(2 * alpha /
-                     acceleration); // Use original acceleration in steps/s^2
+    return std::sqrt(2 * alpha / acceleration);
   }
 
-  // Calculate subsequent intervals
-  return previousInterval -
-         (2 * previousInterval * previousInterval * radsPerSecondSquared) /
-             alpha;
+  return previousInterval /
+         (1 + previousInterval * radsPerSecondSquared / alpha);
 }
 
 // #define K 200   // number of steps per one revolution

@@ -17,10 +17,10 @@ struct AxisLimits {
 };
 
 struct StepTiming {
-  StepTiming(Vector3Int32 aDelta, uint32_t aDelay)
+  StepTiming(Vector3Int8 aDelta, uint32_t aDelay)
       : delta(aDelta), delay(aDelay) {}
   // which axis to increment
-  Vector3Int32 delta;
+  Vector3Int8 delta;
   // delay in microseconds to wait after this step is executed (optional if last
   // step)
   uint32_t delay;
