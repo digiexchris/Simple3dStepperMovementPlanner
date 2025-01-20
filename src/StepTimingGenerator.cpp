@@ -3,10 +3,10 @@
 #include "StepTimingPlanner.hpp"
 #include "Types.hpp"
 #include <algorithm>
-#include <bits/stdint-uintn.h>
 #include <cmath>
 #include <functional>
 #include <numeric>
+#include <stdint.h>
 #include <sys/types.h>
 
 namespace StepTimingPlanner {

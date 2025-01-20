@@ -1,9 +1,8 @@
 #include "MovementProfile.hpp"
 #include <algorithm>
-#include <bits/stdint-intn.h>
-#include <bits/stdint-uintn.h>
 #include <cmath>
 #include <stdexcept>
+#include <stdint.h>
 
 namespace StepTimingPlanner {
 
