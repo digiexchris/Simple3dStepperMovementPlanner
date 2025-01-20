@@ -1,8 +1,10 @@
 #pragma once
 
-#include "StepPlanner.hpp"
-#include <bits/stdint-uintn.h>
+#include "Types.hpp"
 #include <cmath>
+#include <stdint.h>
+
+namespace StepTimingPlanner {
 
 inline uint32_t SecondsToMicroseconds(float seconds) {
   return std::round(seconds * 1000000.0);
@@ -17,20 +19,19 @@ struct AxisLimits {
 };
 
 struct StepTiming {
-  StepTiming(Vector3Int8 aDelta, uint32_t aDelay)
-      : delta(aDelta), delay(aDelay) {}
+  StepTiming(Vec3Int8 aDelta, uint32_t aDelay) : delta(aDelta), delay(aDelay) {}
   // which axis to increment
-  Vector3Int8 delta;
+  Vec3Int8 delta;
   // delay in microseconds to wait after this step is executed (optional if last
   // step)
   uint32_t delay;
 };
 
-class StepTimingGenerator {
+class Generator {
 public:
-  StepTimingGenerator(AxisLimits x, AxisLimits y, AxisLimits z);
+  Generator(AxisLimits x, AxisLimits y, AxisLimits z);
   std::vector<StepTiming>
-  GenerateSteps(const Vector3Int32 &start, const Vector3Int32 &end,
+  GenerateSteps(const Vec3Int32 &start, const Vec3Int32 &end,
                 const Vector<uint16_t> startingSpeedDirection,
                 const uint16_t requestedStraightLineSpeed,
                 const uint16_t requestedEndingStraightLineSpeed);
@@ -42,14 +43,16 @@ protected:
                           const uint8_t drivingAxis) const;
 
   Vector<uint16_t> GetComponentSpeeds(const uint16_t straightLineSpeed,
-                                      const Vector3Int32 &start,
-                                      const Vector3Int32 &end) const;
+                                      const Vec3Int32 &start,
+                                      const Vec3Int32 &end) const;
 
-  Vector3Int32 GetComponentDistances(const Vector3Int32 &start,
-                                     const Vector3Int32 &end) const;
+  Vec3Int32 GetComponentDistances(const Vec3Int32 &start,
+                                  const Vec3Int32 &end) const;
 
-  double GetStraightLineDistance(const Vector3Int32 &first,
-                                 const Vector3Int32 &second) const;
+  double GetStraightLineDistance(const Vec3Int32 &first,
+                                 const Vec3Int32 &second) const;
 
   AxisLimits axisLimits[3];
 };
+
+} // namespace StepTimingPlanner

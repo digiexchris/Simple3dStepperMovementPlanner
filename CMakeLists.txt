@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(StepTimingGenerator)
+project(StepTimingPlanner)
 
 # Set the common output directory for all build targets
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -20,9 +20,9 @@ include_directories(include)
 file(GLOB SOURCES src/*.cpp)
 
 # Create the library
-add_library(StepTimingGenerator ${SOURCES})
+add_library(StepTimingPlanner ${SOURCES})
 
-target_include_directories(StepTimingGenerator PUBLIC include)
+target_include_directories(StepTimingPlanner PUBLIC include)
 
 # Check if this project is used in another project
 if(NOT TARGET ${PROJECT_NAME}_external)

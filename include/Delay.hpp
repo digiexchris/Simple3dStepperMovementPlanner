@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+namespace StepTimingPlanner {
+
 constexpr double PI = 3.14159265358979323846;
 
 /**
@@ -172,3 +174,4 @@ inline double calculateNextInterval(int stepsPerRotation, double acceleration,
 //   return false;
 //   //
 // }
+} // namespace StepTimingPlanner

@@ -1,7 +1,10 @@
 #pragma once
 
-#include "Types.hpp"
+#include <cmath>
+#include <stdint.h>
 #include <vector>
+
+namespace StepTimingPlanner {
 
 enum class ProfileType { ACCELERATION, DECELLERATION, COASTING };
 
@@ -14,11 +17,10 @@ struct Profile {
 
 using MovementProfile = std::vector<Profile>;
 
-#include <algorithm>
-#include <cmath>
-
 MovementProfile CalculateMovementProfile(uint32_t totalSteps,
                                          uint16_t startSpeed,
                                          uint16_t coastSpeed, uint16_t endSpeed,
                                          uint16_t maxAcceleration,
                                          uint16_t maxDeceleration);
+
+} // namespace StepTimingPlanner

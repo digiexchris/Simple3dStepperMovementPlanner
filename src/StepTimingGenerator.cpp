@@ -1,6 +1,6 @@
-#include "StepTiming.hpp"
 #include "MovementProfile.hpp"
 #include "StepPlanner.hpp"
+#include "StepTimingPlanner.hpp"
 #include "Types.hpp"
 #include <algorithm>
 #include <bits/stdint-uintn.h>
@@ -9,18 +9,19 @@
 #include <numeric>
 #include <sys/types.h>
 
-StepTimingGenerator::StepTimingGenerator(AxisLimits x, AxisLimits y,
-                                         AxisLimits z) {
+namespace StepTimingPlanner {
+
+Generator::Generator(AxisLimits x, AxisLimits y, AxisLimits z) {
   axisLimits[0] = x;
   axisLimits[1] = y;
   axisLimits[2] = z;
 }
 
-std::vector<StepTiming> StepTimingGenerator::GenerateSteps(
-    const Vector3Int32 &start, const Vector3Int32 &end,
-    const Vector<uint16_t> startingSpeedDirection,
-    const uint16_t requestedStraightLineSpeed,
-    const uint16_t requestedEndingStraightLineSpeed) {
+std::vector<StepTiming>
+Generator::GenerateSteps(const Vec3Int32 &start, const Vec3Int32 &end,
+                         const Vector<uint16_t> startingSpeedDirection,
+                         const uint16_t requestedStraightLineSpeed,
+                         const uint16_t requestedEndingStraightLineSpeed) {
 
   uint16_t speed = requestedStraightLineSpeed;
 
@@ -94,7 +95,7 @@ std::vector<StepTiming> StepTimingGenerator::GenerateSteps(
     }
   }
 
-  Vector3Int8List deltas = PointsToDeltas(points.points);
+  Vec3Int8List deltas = PointsToDeltas(points.points);
 
   MovementProfile movementProfile = CalculateMovementProfile(
       deltas.size(), startingSpeedDirection[points.drivingAxis],
@@ -173,7 +174,7 @@ std::vector<StepTiming> StepTimingGenerator::GenerateSteps(
   return steps;
 }
 
-uint16_t StepTimingGenerator::GetAcclerationStepCount(
+uint16_t Generator::GetAcclerationStepCount(
     const Vector<uint16_t> startingSpeeds,
     const Vector<uint16_t> requestedComponentSpeeds,
     const uint8_t drivingAxis) const {
@@ -196,13 +197,12 @@ uint16_t StepTimingGenerator::GetAcclerationStepCount(
   return drivingAxisAccelerationSteps;
 }
 
-Vector<uint16_t>
-StepTimingGenerator::GetComponentSpeeds(const uint16_t straightLineSpeed,
-                                        const Vector3Int32 &start,
-                                        const Vector3Int32 &end) const {
+Vector<uint16_t> Generator::GetComponentSpeeds(const uint16_t straightLineSpeed,
+                                               const Vec3Int32 &start,
+                                               const Vec3Int32 &end) const {
 
   // Calculate the movement along each axis
-  Vector3Int32 componentDistance = GetComponentDistances(start, end);
+  Vec3Int32 componentDistance = GetComponentDistances(start, end);
   // Calculate the total distance
   double straightLineDistance = GetStraightLineDistance(start, end);
 
@@ -222,21 +222,21 @@ StepTimingGenerator::GetComponentSpeeds(const uint16_t straightLineSpeed,
   return speeds;
 }
 
-Vector3Int32
-StepTimingGenerator::GetComponentDistances(const Vector3Int32 &start,
-                                           const Vector3Int32 &end) const {
-  Vector3Int32 movement;
+Vec3Int32 Generator::GetComponentDistances(const Vec3Int32 &start,
+                                           const Vec3Int32 &end) const {
+  Vec3Int32 movement;
   std::transform(end.begin(), end.end(), start.begin(), movement.begin(),
                  [](int a, int b) { return std::abs(a - b); });
   return movement;
 }
 
-double
-StepTimingGenerator::GetStraightLineDistance(const Vector3Int32 &first,
-                                             const Vector3Int32 &second) const {
+double Generator::GetStraightLineDistance(const Vec3Int32 &first,
+                                          const Vec3Int32 &second) const {
   double sumOfSquares = std::inner_product(
       first.begin(), first.end(), second.begin(), 0.0, std::plus<double>(),
       [](int a, int b) { return std::pow(b - a, 2); });
 
   return std::sqrt(sumOfSquares);
 }
+
+} // namespace StepTimingPlanner

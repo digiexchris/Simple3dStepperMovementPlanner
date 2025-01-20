@@ -13,14 +13,14 @@ The easiest way to get started with a CMake project is with FetchContent
 
 ```
 FetchContent_Declare(
-  StepperMovementPlanner
+  StepTimingPlanner
   GIT_REPOSITORY https://github.com/digiexchris/Simple3dStepperMovementPlanner.git
   GIT_TAG 0.1.0
 )
 
-FetchContent_MakeAvailable(StepperMovementPlanner)
+FetchContent_MakeAvailable(StepTimingPlanner)
 
-target_link_libraries(YourProject StepTimingGenerator)
+target_link_libraries(YourProject StepTimingPlanner)
 
 ```
 
@@ -29,8 +29,9 @@ target_link_libraries(YourProject StepTimingGenerator)
 Hint: Take a look at the tests for more advanced usage.
 
 ```cpp
-#include "Simple3dStepperMovementPlanner.h"
+#include "StepTimingPlanner.h"
 
+using namespace StepTimingPlanner;
 
 // First, define the limits for your axes:
 // { acceleration in steps per second squared, deceleration, maximum speed in steps per second}
@@ -39,7 +40,7 @@ AxisLimits yLimits = {1000, 1000, 400};
 AxisLimits zLimits = {1000, 1000, 300};
 
 //instantiate the generator:
-StepTimingGenerator generator(xLimits, yLimits, zLimits);
+Generator generator(xLimits, yLimits, zLimits);
 
 //make a start and an end vector (positions are in steps)
 //Vector3Int32(X, Y, Z)

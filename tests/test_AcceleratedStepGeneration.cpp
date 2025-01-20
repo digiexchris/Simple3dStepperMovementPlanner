@@ -1,30 +1,31 @@
-#include "StepPlanner.hpp"
-#include "StepTiming.hpp"
+#include "StepTimingPlanner.hpp"
 #include "Types.hpp"
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <bits/stdint-uintn.h>
 #include <cmath>
 
-class TestGenerator : public StepTimingGenerator {
+using namespace StepTimingPlanner;
+
+class TestGenerator : public Generator {
 public:
   TestGenerator(AxisLimits anXLimit, AxisLimits aYLimit, AxisLimits aZLimit)
-      : StepTimingGenerator(anXLimit, aYLimit, aZLimit) {}
+      : Generator(anXLimit, aYLimit, aZLimit) {}
 
   // redeclearing as public for testing
   Vector<uint16_t> TestGetComponentSpeeds(const uint16_t straightLineSpeed,
-                                          const Vector3Int32 &start,
-                                          const Vector3Int32 &end) const {
+                                          const Vec3Int32 &start,
+                                          const Vec3Int32 &end) const {
     return GetComponentSpeeds(straightLineSpeed, start, end);
   }
 
-  Vector3Int32 TestGetComponentDistances(const Vector3Int32 &start,
-                                         const Vector3Int32 &end) const {
+  Vec3Int32 TestGetComponentDistances(const Vec3Int32 &start,
+                                      const Vec3Int32 &end) const {
     return GetComponentDistances(start, end);
   };
 
-  double TestGetStraightLineDistance(const Vector3Int32 &first,
-                                     const Vector3Int32 &second) const {
+  double TestGetStraightLineDistance(const Vec3Int32 &first,
+                                     const Vec3Int32 &second) const {
     return GetStraightLineDistance(first, second);
   }
 };
@@ -33,9 +34,9 @@ TEST(StepTimingGeneratorAcceleration, NonUniformMoveCappedByNonDrivingAxis) {
   AxisLimits xLimits = {50, 50, 500};   // maxAcceleration, maxSpeed
   AxisLimits yLimits = {80, 80, 400};   // Different maxSpeed for Y
   AxisLimits zLimits = {100, 100, 300}; // Different maxSpeed for Z
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 end = {10, 5, 9};
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 end = {10, 5, 9};
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 1000;
   uint16_t endingSpeed = 0;
@@ -46,7 +47,7 @@ TEST(StepTimingGeneratorAcceleration, NonUniformMoveCappedByNonDrivingAxis) {
   ASSERT_EQ(steps.size(), 10);
 
   // Calculate the movement along each axis
-  Vector3Int32 movement = {10, 5, 9}; // Corresponds to end - start
+  Vec3Int32 movement = {10, 5, 9}; // Corresponds to end - start
 
   // Identify the driving axis (the axis with the largest movement)
   int drivingAxis = 0;
@@ -62,7 +63,7 @@ TEST(StepTimingGeneratorAcceleration, NonUniformMoveCappedByNonDrivingAxis) {
   std::array<uint32_t, 10> expected({750751, 501502, 252253, 3003, 3003, 3003,
                                      252252, 501501, 750751, 750750});
 
-  Vector3Int32 position({0, 0, 0});
+  Vec3Int32 position({0, 0, 0});
   for (int i = 0; i < steps.size(); ++i) {
     char buffer[50];
     std::snprintf(buffer, sizeof(buffer), "index: %u", i);
@@ -72,7 +73,7 @@ TEST(StepTimingGeneratorAcceleration, NonUniformMoveCappedByNonDrivingAxis) {
                    position.begin(), std::plus<>());
   }
 
-  EXPECT_EQ(position, Vector3Int32({10, 5, 9}));
+  EXPECT_EQ(position, Vec3Int32({10, 5, 9}));
 
   // EXPECT_EQ(steps.back().delay, 0);
 }

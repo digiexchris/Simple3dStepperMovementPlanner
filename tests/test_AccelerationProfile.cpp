@@ -2,6 +2,8 @@
 #include "gtest/gtest.h"
 #include <stdexcept>
 
+using namespace StepTimingPlanner;
+
 TEST(StepProfileTest, SufficientSteps) {
   MovementProfile profile =
       CalculateMovementProfile(1000, 10.0, 50.0, 10.0, 5.0, 5.0);

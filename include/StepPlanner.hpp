@@ -2,14 +2,17 @@
 
 #include "Types.hpp"
 #include <cstdint>
+namespace StepTimingPlanner {
 
 struct BresenhamPoints {
-  Vector3Int32List points;
+  Vec3Int32List points;
   uint8_t drivingAxis;
 };
 
-BresenhamPoints Bresenham3D(Vector3Int32 start, Vector3Int32 end);
+BresenhamPoints Bresenham3D(Vec3Int32 start, Vec3Int32 end);
 
 // turn points returned from the Bresenham function into how far each point
 // changes from the previous point
-Vector3Int8List PointsToDeltas(Vector3Int32List &aListOfPoints);
+Vec3Int8List PointsToDeltas(Vec3Int32List &aListOfPoints);
+
+} // namespace StepTimingPlanner

@@ -1,11 +1,11 @@
-#include <cmath>
-#include <iostream>
-#include <vector>
-
 #include "StepPlanner.hpp"
 #include "Types.hpp"
+#include <cmath>
+#include <stdexcept>
 
-BresenhamPoints Bresenham3D(Vector3Int32 start, Vector3Int32 end) {
+namespace StepTimingPlanner {
+
+BresenhamPoints Bresenham3D(Vec3Int32 start, Vec3Int32 end) {
 
   uint8_t drivingAxis = 16;
   if (start.size() != 3 || end.size() != 3) {
@@ -18,7 +18,7 @@ BresenhamPoints Bresenham3D(Vector3Int32 start, Vector3Int32 end) {
   int32_t y2 = end[1];
   int32_t z2 = end[2];
 
-  Vector3Int32List ListOfPoints;
+  Vec3Int32List ListOfPoints;
   ListOfPoints.push_back({x1, y1, z1});
   int32_t dx = abs(x2 - x1);
   int32_t dy = abs(y2 - y1);
@@ -102,10 +102,10 @@ BresenhamPoints Bresenham3D(Vector3Int32 start, Vector3Int32 end) {
   return BresenhamPoints{ListOfPoints, drivingAxis};
 }
 
-Vector3Int8List PointsToDeltas(Vector3Int32List &aListOfPoints) {
-  Vector3Int8List listOfDeltas;
+Vec3Int8List PointsToDeltas(Vec3Int32List &aListOfPoints) {
+  Vec3Int8List listOfDeltas;
   for (size_t i = 0; i < aListOfPoints.size() - 1; i++) {
-    Vector3Int8 delta = {
+    Vec3Int8 delta = {
         static_cast<int8_t>(aListOfPoints[i + 1][0] - aListOfPoints[i][0]),
         static_cast<int8_t>(aListOfPoints[i + 1][1] - aListOfPoints[i][1]),
         static_cast<int8_t>(aListOfPoints[i + 1][2] - aListOfPoints[i][2])};
@@ -113,3 +113,4 @@ Vector3Int8List PointsToDeltas(Vector3Int32List &aListOfPoints) {
   }
   return listOfDeltas;
 }
+} // namespace StepTimingPlanner

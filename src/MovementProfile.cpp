@@ -3,8 +3,9 @@
 #include <bits/stdint-intn.h>
 #include <bits/stdint-uintn.h>
 #include <cmath>
-#include <exception>
 #include <stdexcept>
+
+namespace StepTimingPlanner {
 
 uint32_t GetAccelerationDistance(uint16_t startSpeed, uint16_t endSpeed,
                                  uint16_t maxAcceleration) {
@@ -155,3 +156,5 @@ MovementProfile CalculateMovementProfile(uint32_t totalSteps,
 
   return profile;
 }
+
+} // namespace StepTimingPlanner

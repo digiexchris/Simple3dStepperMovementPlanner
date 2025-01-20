@@ -1,6 +1,7 @@
 #include "Delay.hpp"
 #include "gtest/gtest.h"
 
+using namespace StepTimingPlanner;
 
 TEST(Delay, CalculateIntervalBasic) {
   int stepsPerRotation = 200;

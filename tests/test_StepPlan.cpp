@@ -1,61 +1,61 @@
-#include "StepPlanner.hpp"
-#include "StepTiming.hpp"
+#include "StepTimingPlanner.hpp"
 #include "Types.hpp"
 #include "Util.hpp"
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <bits/stdint-uintn.h>
-#include <chrono>
 #include <cmath>
+
+using namespace StepTimingPlanner;
 
 // Sample AxisLimits for testing
 AxisLimits xLimits = {1000, 1000, 500}; // maxAcceleration, maxSpeed
 AxisLimits yLimits = {1000, 1000, 400}; // Different maxSpeed for Y
 AxisLimits zLimits = {1000, 1000, 300}; // Different maxSpeed for Z
 
-class TestGenerator : public StepTimingGenerator {
+class TestGenerator : public Generator {
 public:
   TestGenerator(AxisLimits anXLimit, AxisLimits aYLimit, AxisLimits aZLimit)
-      : StepTimingGenerator(anXLimit, aYLimit, aZLimit) {}
+      : Generator(anXLimit, aYLimit, aZLimit) {}
 
   // redeclearing as public for testing
   Vector<uint16_t> TestGetComponentSpeeds(const uint16_t straightLineSpeed,
-                                          const Vector3Int32 &start,
-                                          const Vector3Int32 &end) const {
+                                          const Vec3Int32 &start,
+                                          const Vec3Int32 &end) const {
     return GetComponentSpeeds(straightLineSpeed, start, end);
   }
 
-  Vector3Int32 TestGetComponentDistances(const Vector3Int32 &start,
-                                         const Vector3Int32 &end) const {
+  Vec3Int32 TestGetComponentDistances(const Vec3Int32 &start,
+                                      const Vec3Int32 &end) const {
     return GetComponentDistances(start, end);
   };
 
-  double TestGetStraightLineDistance(const Vector3Int32 &first,
-                                     const Vector3Int32 &second) const {
+  double TestGetStraightLineDistance(const Vec3Int32 &first,
+                                     const Vec3Int32 &second) const {
     return GetStraightLineDistance(first, second);
   }
 };
 
 TestGenerator generator(xLimits, yLimits, zLimits);
 
-TEST(StepTimingGenerator, GetComponentDistances) {
-  Vector3Int32 start({0, 0, 0});
-  Vector3Int32 end({10, 11, 12});
+TEST(Generator, GetComponentDistances) {
+  Vec3Int32 start({0, 0, 0});
+  Vec3Int32 end({10, 11, 12});
 
-  Vector3Int32 distances = generator.TestGetComponentDistances(start, end);
+  Vec3Int32 distances = generator.TestGetComponentDistances(start, end);
 
-  ASSERT_EQ(distances, Vector3Int32({10, 11, 12}));
+  ASSERT_EQ(distances, Vec3Int32({10, 11, 12}));
 
   start = {10, 11, 12};
   end = {0, 0, 0};
   distances = generator.TestGetComponentDistances(start, end);
 
-  ASSERT_EQ(distances, Vector3Int32({10, 11, 12}));
+  ASSERT_EQ(distances, Vec3Int32({10, 11, 12}));
 }
 
-TEST(StepTimingGenerator, GetStraightLineDistance) {
-  Vector3Int32 start({0, 0, 0});
-  Vector3Int32 end({10, 11, 12});
+TEST(Generator, GetStraightLineDistance) {
+  Vec3Int32 start({0, 0, 0});
+  Vec3Int32 end({10, 11, 12});
 
   double distance = generator.TestGetStraightLineDistance(start, end);
 
@@ -75,9 +75,9 @@ TEST(StepTimingGenerator, GetStraightLineDistance) {
   ASSERT_NEAR(distance, 17.320, 0.001);
 }
 
-TEST(StepTimingGenerator, GetComponentSpeedsSingleAxis) {
-  Vector3Int32 start({0, 0, 0});
-  Vector3Int32 end({10, 0, 0});
+TEST(Generator, GetComponentSpeedsSingleAxis) {
+  Vec3Int32 start({0, 0, 0});
+  Vec3Int32 end({10, 0, 0});
   uint16_t requestedSpeed = 200;
 
   Vector<uint16_t> actualSpeed =
@@ -85,40 +85,40 @@ TEST(StepTimingGenerator, GetComponentSpeedsSingleAxis) {
 
   ASSERT_EQ(actualSpeed, Vector<uint16_t>({200, 0, 0}));
 
-  end = Vector3Int32({0, 10, 0});
+  end = Vec3Int32({0, 10, 0});
 
   actualSpeed = generator.TestGetComponentSpeeds(requestedSpeed, start, end);
 
   ASSERT_EQ(actualSpeed, Vector<uint16_t>({0, 200, 0}));
 
-  end = Vector3Int32({0, 0, 10});
+  end = Vec3Int32({0, 0, 10});
 
   actualSpeed = generator.TestGetComponentSpeeds(requestedSpeed, start, end);
 
   ASSERT_EQ(actualSpeed, Vector<uint16_t>({0, 0, 200}));
 
-  end = Vector3Int32({-10, 0, 0});
+  end = Vec3Int32({-10, 0, 0});
 
   actualSpeed = generator.TestGetComponentSpeeds(requestedSpeed, start, end);
 
   ASSERT_EQ(actualSpeed, Vector<uint16_t>({200, 0, 0}));
 
-  end = Vector3Int32({0, -10, 0});
+  end = Vec3Int32({0, -10, 0});
 
   actualSpeed = generator.TestGetComponentSpeeds(requestedSpeed, start, end);
 
   ASSERT_EQ(actualSpeed, Vector<uint16_t>({0, 200, 0}));
 
-  end = Vector3Int32({0, 0, -10});
+  end = Vec3Int32({0, 0, -10});
 
   actualSpeed = generator.TestGetComponentSpeeds(requestedSpeed, start, end);
 
   ASSERT_EQ(actualSpeed, Vector<uint16_t>({0, 0, 200}));
 }
 
-TEST(StepTimingGenerator, GetComponentSpeedsMultiAxis) {
-  Vector3Int32 start({0, 0, 0});
-  Vector3Int32 end({10, 10, 10});
+TEST(Generator, GetComponentSpeedsMultiAxis) {
+  Vec3Int32 start({0, 0, 0});
+  Vec3Int32 end({10, 10, 10});
   uint16_t requestedSpeed = 200;
 
   Vector<uint16_t> actualSpeed =
@@ -126,19 +126,19 @@ TEST(StepTimingGenerator, GetComponentSpeedsMultiAxis) {
 
   ASSERT_EQ(actualSpeed, Vector<uint16_t>({115, 115, 115}));
 
-  end = Vector3Int32({0, 10, 50});
+  end = Vec3Int32({0, 10, 50});
 
   actualSpeed = generator.TestGetComponentSpeeds(requestedSpeed, start, end);
 
   ASSERT_EQ(actualSpeed, Vector<uint16_t>({0, 39, 196}));
 
-  end = Vector3Int32({0, -10, 50});
+  end = Vec3Int32({0, -10, 50});
 
   actualSpeed = generator.TestGetComponentSpeeds(requestedSpeed, start, end);
 
   ASSERT_EQ(actualSpeed, Vector<uint16_t>({0, 39, 196}));
 
-  end = Vector3Int32({0, -10, -50});
+  end = Vec3Int32({0, -10, -50});
 
   actualSpeed = generator.TestGetComponentSpeeds(requestedSpeed, start, end);
 
@@ -146,10 +146,10 @@ TEST(StepTimingGenerator, GetComponentSpeedsMultiAxis) {
 }
 
 // Testing when the speed is capped by the X axis limit
-TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingXAxis) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 end = {200, 0, 0}; // Move primarily on the X axis
+TEST(GeneratorDifferentLimitsTest, SpeedCappingXAxis) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 end = {200, 0, 0}; // Move primarily on the X axis
 
   // Expected speed capping
   uint16_t cappedSpeed = xLimits.maxSpeed;
@@ -171,7 +171,7 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingXAxis) {
     if (steps[i].delay < lowestActualDelay) {
       lowestActualDelay = steps[i].delay;
     }
-    EXPECT_EQ(steps[i].delta, Vector3Int8({1, 0, 0}));
+    EXPECT_EQ(steps[i].delta, Vec3Int8({1, 0, 0}));
 
     EXPECT_GE(lowestActualDelay, minimumInterval);
 
@@ -184,10 +184,10 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingXAxis) {
 }
 
 // Testing when the speed is capped by the Y axis limit
-TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingYAxis) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 end = {0, 50, 0}; // Move primarily on the Y axis
+TEST(GeneratorDifferentLimitsTest, SpeedCappingYAxis) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 end = {0, 50, 0}; // Move primarily on the Y axis
 
   // Expected speed capping
   uint16_t cappedSpeed = yLimits.maxSpeed;
@@ -211,7 +211,7 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingYAxis) {
       lowestActualDelay = steps[i].delay;
     }
 
-    EXPECT_EQ(steps[i].delta, Vector3Int8({0, 1, 0}));
+    EXPECT_EQ(steps[i].delta, Vec3Int8({0, 1, 0}));
     EXPECT_GE(lowestActualDelay, minimumInterval);
   }
 
@@ -220,10 +220,10 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingYAxis) {
 }
 
 // Testing when the speed is capped by the Z axis limit
-TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingZAxis) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 end = {0, 0, 50}; // Move primarily on the Z axis
+TEST(GeneratorDifferentLimitsTest, SpeedCappingZAxis) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 end = {0, 0, 50}; // Move primarily on the Z axis
 
   // Expected speed capping
   uint16_t cappedSpeed = zLimits.maxSpeed;
@@ -247,7 +247,7 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingZAxis) {
       lowestActualDelay = steps[i].delay;
     }
 
-    EXPECT_EQ(steps[i].delta, Vector3Int8({0, 0, 1}));
+    EXPECT_EQ(steps[i].delta, Vec3Int8({0, 0, 1}));
     EXPECT_GE(lowestActualDelay, minimumInterval);
   }
 
@@ -258,10 +258,10 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SpeedCappingZAxis) {
 }
 
 // Testing when the requested speed is within the limits of all axes
-TEST(StepTimingGeneratorDifferentLimitsTest, NoSpeedCappingXAxis) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 end = {10, 0, 0}; // Move primarily on the X axis
+TEST(GeneratorDifferentLimitsTest, NoSpeedCappingXAxis) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 end = {10, 0, 0}; // Move primarily on the X axis
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 300;
   uint16_t endingSpeed = 0;
@@ -281,17 +281,17 @@ TEST(StepTimingGeneratorDifferentLimitsTest, NoSpeedCappingXAxis) {
     if (steps[i].delay < actualMinimumDelay) {
       actualMinimumDelay = steps[i].delay;
     }
-    EXPECT_EQ(steps[i].delta, Vector3Int8({1, 0, 0}));
+    EXPECT_EQ(steps[i].delta, Vec3Int8({1, 0, 0}));
   }
 
   EXPECT_GT(actualMinimumDelay,
             minimumDelay); // The last step should have zero delay
 }
 
-TEST(StepTimingGeneratorDifferentLimitsTest, NoSpeedCappingYAxis) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 end = {0, 10, 0}; // Move primarily on the X axis
+TEST(GeneratorDifferentLimitsTest, NoSpeedCappingYAxis) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 end = {0, 10, 0}; // Move primarily on the X axis
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 300;
   uint16_t endingSpeed = 0;
@@ -311,17 +311,17 @@ TEST(StepTimingGeneratorDifferentLimitsTest, NoSpeedCappingYAxis) {
     if (steps[i].delay < actualMinimumDelay) {
       actualMinimumDelay = steps[i].delay;
     }
-    EXPECT_EQ(steps[i].delta, Vector3Int8({0, 1, 0}));
+    EXPECT_EQ(steps[i].delta, Vec3Int8({0, 1, 0}));
   }
 
   EXPECT_GT(actualMinimumDelay,
             minimumDelay); // The last step should have zero delay
 }
 
-TEST(StepTimingGeneratorDifferentLimitsTest, NoSpeedCappingZAxis) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 end = {0, 0, 10}; // Move primarily on the X axis
+TEST(GeneratorDifferentLimitsTest, NoSpeedCappingZAxis) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 end = {0, 0, 10}; // Move primarily on the X axis
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 300;
   uint16_t endingSpeed = 0;
@@ -341,7 +341,7 @@ TEST(StepTimingGeneratorDifferentLimitsTest, NoSpeedCappingZAxis) {
     if (steps[i].delay < actualMinimumDelay) {
       actualMinimumDelay = steps[i].delay;
     }
-    EXPECT_EQ(steps[i].delta, Vector3Int8({0, 0, 1}));
+    EXPECT_EQ(steps[i].delta, Vec3Int8({0, 0, 1}));
   }
 
   EXPECT_GT(actualMinimumDelay,
@@ -349,10 +349,10 @@ TEST(StepTimingGeneratorDifferentLimitsTest, NoSpeedCappingZAxis) {
 }
 
 // A simple linear move on the X-axis with different AxisLimits
-TEST(StepTimingGeneratorDifferentLimitsTest, SimpleLinearMove) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 end = {10, 0, 0};
+TEST(GeneratorDifferentLimitsTest, SimpleLinearMove) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 end = {10, 0, 0};
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 100;
   uint16_t endingSpeed = 0;
@@ -371,7 +371,7 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SimpleLinearMove) {
     if (steps[i].delay < actualMinimumDelay) {
       actualMinimumDelay = steps[i].delay;
     }
-    EXPECT_EQ(steps[i].delta, Vector3Int8({1, 0, 0}));
+    EXPECT_EQ(steps[i].delta, Vec3Int8({1, 0, 0}));
   }
 
   EXPECT_EQ(actualMinimumDelay,
@@ -379,10 +379,10 @@ TEST(StepTimingGeneratorDifferentLimitsTest, SimpleLinearMove) {
 }
 
 // Testing when start and end are the same with different AxisLimits
-TEST(StepTimingGeneratorDifferentLimitsTest, NoMovement) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {5, 5, 5};
-  Vector3Int32 end = {5, 5, 5};
+TEST(GeneratorDifferentLimitsTest, NoMovement) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {5, 5, 5};
+  Vec3Int32 end = {5, 5, 5};
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 100;
   uint16_t endingSpeed = 0;
@@ -394,11 +394,11 @@ TEST(StepTimingGeneratorDifferentLimitsTest, NoMovement) {
 }
 
 // Testing a diagonal move with all axes with different AxisLimits
-TEST(StepTimingGeneratorDifferentLimitsTest, DiagonalMove) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 current = {0, 0, 0};
-  Vector3Int32 end = {25, 25, 25};
+TEST(GeneratorDifferentLimitsTest, DiagonalMove) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 current = {0, 0, 0};
+  Vec3Int32 end = {25, 25, 25};
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 1000;
   uint16_t endingSpeed = 0;
@@ -409,7 +409,7 @@ TEST(StepTimingGeneratorDifferentLimitsTest, DiagonalMove) {
   ASSERT_EQ(steps.size(), 25);
 
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delta, Vector3Int8({1, 1, 1}));
+    EXPECT_EQ(steps[i].delta, Vec3Int8({1, 1, 1}));
     std::transform(current.begin(), current.end(), steps[i].delta.begin(),
                    current.begin(), std::plus<int>());
   }
@@ -446,11 +446,11 @@ TEST(StepTimingGeneratorDifferentLimitsTest, DiagonalMove) {
 
 // Testing a diagonal move with all axes with different AxisLimits, in the
 // negative direction
-TEST(StepTimingGeneratorDifferentLimitsTest, DiagonalMoveNegative) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 current = {0, 0, 0};
-  Vector3Int32 end = {-25, -25, -25};
+TEST(GeneratorDifferentLimitsTest, DiagonalMoveNegative) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 current = {0, 0, 0};
+  Vec3Int32 end = {-25, -25, -25};
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 1000;
   uint16_t endingSpeed = 0;
@@ -461,7 +461,7 @@ TEST(StepTimingGeneratorDifferentLimitsTest, DiagonalMoveNegative) {
   ASSERT_EQ(steps.size(), 25);
 
   for (size_t i = 0; i < steps.size(); ++i) {
-    EXPECT_EQ(steps[i].delta, Vector3Int8({-1, -1, -1}));
+    EXPECT_EQ(steps[i].delta, Vec3Int8({-1, -1, -1}));
     std::transform(current.begin(), current.end(), steps[i].delta.begin(),
                    current.begin(), std::plus<int>());
   }
@@ -498,11 +498,11 @@ TEST(StepTimingGeneratorDifferentLimitsTest, DiagonalMoveNegative) {
 
 // Testing a non-uniform move with different distances on each axis with
 // different AxisLimits
-TEST(StepTimingGeneratorDifferentLimitsTest, NonUniformMove) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 current = {0, 0, 0};
-  Vector3Int32 end = {10, 5, 2};
+TEST(GeneratorDifferentLimitsTest, NonUniformMove) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 current = {0, 0, 0};
+  Vec3Int32 end = {10, 5, 2};
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 1000;
   uint16_t endingSpeed = 0;
@@ -513,7 +513,7 @@ TEST(StepTimingGeneratorDifferentLimitsTest, NonUniformMove) {
   ASSERT_EQ(steps.size(), 10);
 
   // Calculate the movement along each axis
-  Vector3Int32 movement = {10, 5, 2}; // Corresponds to end - start
+  Vec3Int32 movement = {10, 5, 2}; // Corresponds to end - start
 
   // Identify the driving axis (the axis with the largest movement)
   int drivingAxis = 0;
@@ -538,12 +538,11 @@ TEST(StepTimingGeneratorDifferentLimitsTest, NonUniformMove) {
   // EXPECT_EQ(steps.back().delay, 0);
 }
 
-TEST(StepTimingGeneratorDifferentLimitsTest,
-     NonUniformMoveCappedByNonDrivingAxis) {
-  StepTimingGenerator generator(xLimits, yLimits, zLimits);
-  Vector3Int32 start = {0, 0, 0};
-  Vector3Int32 current = {0, 0, 0};
-  Vector3Int32 end = {10, 5, 9};
+TEST(GeneratorDifferentLimitsTest, NonUniformMoveCappedByNonDrivingAxis) {
+  Generator generator(xLimits, yLimits, zLimits);
+  Vec3Int32 start = {0, 0, 0};
+  Vec3Int32 current = {0, 0, 0};
+  Vec3Int32 end = {10, 5, 9};
   Vector<uint16_t> startingSpeedDirection({0, 0, 0});
   uint16_t requestedSpeed = 1000;
   uint16_t endingSpeed = 0;
@@ -556,7 +555,7 @@ TEST(StepTimingGeneratorDifferentLimitsTest,
   ASSERT_EQ(steps.size(), 10);
 
   // Calculate the movement along each axis
-  Vector3Int32 movement = {10, 5, 9}; // Corresponds to end - start
+  Vec3Int32 movement = {10, 5, 9}; // Corresponds to end - start
 
   // Identify the driving axis (the axis with the largest movement)
   int drivingAxis = 0;

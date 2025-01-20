@@ -21,7 +21,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Add test executable
 file(GLOB_RECURSE TEST_SOURCES "*.cpp")
-add_executable(StepTimingGenerator_Tests ${TEST_SOURCES})
+add_executable(StepTimingPlanner_Tests ${TEST_SOURCES})
 
 add_compile_options(
     ### Gnu/Clang C Options
@@ -30,8 +30,8 @@ add_compile_options(
 )
 
 # Link against GoogleTest and GoogleMock
-target_link_libraries(StepTimingGenerator_Tests
-StepTimingGenerator
+target_link_libraries(StepTimingPlanner_Tests
+StepTimingPlanner
 GTest::gtest_main
 # tcmalloc
 # profiler
@@ -52,6 +52,6 @@ add_custom_target(copy_compile_commands ALL
 )
 
 include(GoogleTest)
-gtest_discover_tests(StepTimingGenerator_Tests)
+gtest_discover_tests(StepTimingPlanner_Tests)
 
-# set_tests_properties(StepTimingGenerator_Tests PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+# set_tests_properties(StepTimingPlanner_Tests PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
