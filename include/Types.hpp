@@ -4,7 +4,8 @@
 #include <stdint.h>
 #include <vector>
 
-template <typename T> using Vector = std::array<T, 3>;
+template <typename T>
+using Vector = std::array<T, 3>;
 
 using Vec3Uint8 = Vector<uint8_t>;
 using Vec3Int8 = Vector<int8_t>;

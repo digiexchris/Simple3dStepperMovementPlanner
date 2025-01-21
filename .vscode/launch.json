@@ -5,7 +5,7 @@
             "name": "(lldb) Launch",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/build/tests/StepTimingGenerator_Tests",
+            "program": "${workspaceRoot}/build/tests/StepTimingPlanner_Tests",
             "args": ["--gtest_break_on_failure"],  // Example for Google Test
             "cwd": "${workspaceRoot}",
             "initCommands": [],  // Custom LLDB commands can be placed here
